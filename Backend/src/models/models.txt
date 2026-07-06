@@ -1,0 +1,13 @@
+USER MODEL 
+    Name 
+    email
+    password (hashed)
+    contact
+    createdAt (timestamp)
+
+Transaction
+    userId (ref),
+    name, type: 'income' | 'expense',
+    isDefault: Boolean
+    createdAt
+
