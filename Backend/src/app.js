@@ -8,7 +8,10 @@ const cors=require('cors')
 const app = express()
 app.use(
   cors({
-    origin: ["http://localhost:5173","https://personal-expense-tracker-sand-pi.vercel.app/"], // your Vite dev server
+    origin: [
+      "http://localhost:5173",
+      "https://personal-expense-tracker-sand-pi.vercel.app",
+    ],
     credentials: true,
   })
 );
