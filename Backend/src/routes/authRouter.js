@@ -4,13 +4,13 @@ const authcontroller = require("../controller/authcontroller");
 const { authProtectMiddleware } = require("../middleware/authMiddleware");
 
 // Register route
-router.post("/api/register", authcontroller.registerUser);
+router.post("/register", authcontroller.registerUser);
 
 // Login route
-router.post("/api/login", authcontroller.loginUser);
+router.post("/login", authcontroller.loginUser);
 
 //all users route
-router.get("/api/Allusers", authcontroller.users);
+router.get("/Allusers", authcontroller.users);
 
 module.exports = router;
 
