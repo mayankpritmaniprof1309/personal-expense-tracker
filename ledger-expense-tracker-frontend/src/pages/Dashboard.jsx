@@ -48,7 +48,7 @@ export default function Dashboard() {
     } catch (err) {
       setLoadError(
         err?.response?.data?.message ||
-          "Couldn't reach the server. Make sure your backend is running and VITE_API_BASE_URL is set."
+        "Couldn't reach the server. Make sure your backend is running and VITE_API_BASE_URL is set."
       );
     } finally {
       setLoading(false);
@@ -163,8 +163,6 @@ export default function Dashboard() {
         </div>
       )}
 
-      {loading ? <SummaryCardsSkeleton /> : <SummaryCards summary={summary} />}
-
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
         <div className="lg:col-span-2">
           <TransactionForm
@@ -188,6 +186,8 @@ export default function Dashboard() {
           )}
         </div>
       </div>
+
+      {loading ? <SummaryCardsSkeleton /> : <SummaryCards summary={summary} />}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {loading ? <ChartSkeleton /> : <ExpensePieChart summary={summary} />}
