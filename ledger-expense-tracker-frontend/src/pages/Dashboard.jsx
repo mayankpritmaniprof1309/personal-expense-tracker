@@ -5,8 +5,6 @@ import SummaryCards from "../components/SummaryCards";
 import TransactionForm from "../components/TransactionForm";
 import TransactionTable from "../components/TransactionTable";
 import ExpensePieChart from "../components/ExpensePieChart";
-import IncomeExpenseBarChart from "../components/IncomeExpenseBarChart";
-import MonthlyReport from "../components/MonthlyReport";
 import ConfirmModal from "../components/ConfirmModal";
 import { SummaryCardsSkeleton, ChartSkeleton, TableRowsSkeleton } from "../components/LoadingSkeleton";
 import {
@@ -189,13 +187,8 @@ export default function Dashboard() {
 
       {loading ? <SummaryCardsSkeleton /> : <SummaryCards summary={summary} />}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {loading ? <ChartSkeleton /> : <ExpensePieChart summary={summary} />}
-        {loading ? <ChartSkeleton /> : <IncomeExpenseBarChart transactions={transactions} />}
-      </div>
-
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-        {loading ? <ChartSkeleton /> : <MonthlyReport transactions={transactions} />}
+        {loading ? <ChartSkeleton /> : <ExpensePieChart summary={summary} />}
       </motion.div>
 
       <ConfirmModal

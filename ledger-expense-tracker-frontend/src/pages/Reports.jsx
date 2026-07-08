@@ -13,7 +13,9 @@ import {
 import { getTransactions } from "../services/transactionService";
 import { formatCurrency, formatDate } from "../utils/format";
 import { exportTransactionsToCSV, exportReportToPDF } from "../utils/export";
-import { SummaryCardsSkeleton, TableRowsSkeleton } from "../components/LoadingSkeleton";
+import { SummaryCardsSkeleton, TableRowsSkeleton, ChartSkeleton } from "../components/LoadingSkeleton";
+import IncomeExpenseBarChart from "../components/IncomeExpenseBarChart";
+import MonthlyReport from "../components/MonthlyReport";
 
 export default function Reports() {
   const [transactions, setTransactions] = useState([]);
@@ -134,6 +136,16 @@ export default function Reports() {
           ))}
         </div>
       )}
+
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.1 }}
+        className="grid grid-cols-1 gap-6 lg:grid-cols-2"
+      >
+        {loading ? <ChartSkeleton /> : <IncomeExpenseBarChart transactions={transactions} />}
+        {loading ? <ChartSkeleton /> : <MonthlyReport transactions={transactions} />}
+      </motion.div>
 
       <div className="glass-panel p-6">
         <h3 className="mb-4 font-display text-lg font-semibold text-white">All transactions</h3>
