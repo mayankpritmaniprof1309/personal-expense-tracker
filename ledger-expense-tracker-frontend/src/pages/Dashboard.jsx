@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import SummaryCards from "../components/SummaryCards";
@@ -35,6 +35,13 @@ export default function Dashboard() {
   const [editingTx, setEditingTx] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const formRef = useRef(null);
+
+  useEffect(() => {
+    if (editingTx && formRef.current) {
+      formRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [editingTx]);
 
   const fetchAll = useCallback(async () => {
     setLoadError("");
@@ -162,7 +169,7 @@ export default function Dashboard() {
       )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-        <div className="lg:col-span-2">
+        <div ref={formRef} className="lg:col-span-2 scroll-mt-24">
           <TransactionForm
             key={editingTx ? editingTx._id || editingTx.id : "new"}
             initialData={editingTx}

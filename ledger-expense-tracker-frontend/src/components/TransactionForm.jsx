@@ -54,7 +54,9 @@ export default function TransactionForm({ onSubmit, initialData = null, onCancel
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
       onSubmit={handleSubmit}
-      className="glass-panel space-y-4 p-6"
+      className={`glass-panel space-y-4 p-6 transition-all duration-300 ${
+        isEdit ? "ring-2 ring-violet-500/50 shadow-glow-violet" : ""
+      }`}
     >
       <div className="flex items-center justify-between">
         <h3 className="font-display text-lg font-semibold text-white">
