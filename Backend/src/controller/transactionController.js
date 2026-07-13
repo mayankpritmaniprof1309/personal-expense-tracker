@@ -52,7 +52,7 @@ async function getTransactions(req, res) {
     }
 
     const transactions = await Transaction.find(filter)
-      .sort({ createdAt: -1 })
+      .sort({ date: -1, createdAt: -1 })
       .skip((Number(page) - 1) * Number(limit))
       .limit(Number(limit));
 
