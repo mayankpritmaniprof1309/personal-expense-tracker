@@ -1,8 +1,16 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Plus, ArrowUpCircle, ArrowDownCircle, Loader2 } from "lucide-react";
+import { Plus, ArrowUpCircle, ArrowDownCircle, Loader2, CalendarDays } from "lucide-react";
 
-const emptyForm = { name: "", amount: "", type: "expense", isDefault: false };
+function getTodayISO() {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+const emptyForm = { name: "", amount: "", type: "expense", isDefault: false, date: getTodayISO() };
 
 export default function TransactionForm({ onSubmit, initialData = null, onCancel }) {
   const [form, setForm] = useState(emptyForm);
@@ -12,14 +20,34 @@ export default function TransactionForm({ onSubmit, initialData = null, onCancel
 
   useEffect(() => {
     if (initialData) {
+      // When editing, extract the date from the existing transaction
+      let existingDate = getTodayISO();
+      if (initialData.date) {
+        const d = new Date(initialData.date);
+        if (!Number.isNaN(d.getTime())) {
+          const yyyy = d.getFullYear();
+          const mm = String(d.getMonth() + 1).padStart(2, "0");
+          const dd = String(d.getDate()).padStart(2, "0");
+          existingDate = `${yyyy}-${mm}-${dd}`;
+        }
+      } else if (initialData.createdAt) {
+        const d = new Date(initialData.createdAt);
+        if (!Number.isNaN(d.getTime())) {
+          const yyyy = d.getFullYear();
+          const mm = String(d.getMonth() + 1).padStart(2, "0");
+          const dd = String(d.getDate()).padStart(2, "0");
+          existingDate = `${yyyy}-${mm}-${dd}`;
+        }
+      }
       setForm({
         name: initialData.name || "",
         amount: initialData.amount ?? "",
         type: initialData.type || "expense",
         isDefault: Boolean(initialData.isDefault),
+        date: existingDate,
       });
     } else {
-      setForm(emptyForm);
+      setForm({ ...emptyForm, date: getTodayISO() });
     }
   }, [initialData]);
 
@@ -27,6 +55,17 @@ export default function TransactionForm({ onSubmit, initialData = null, onCancel
     const next = {};
     if (!form.name.trim()) next.name = "Give this transaction a name.";
     if (!form.amount || Number(form.amount) <= 0) next.amount = "Enter an amount greater than 0.";
+
+    // Validate date is not in the future
+    if (form.date) {
+      const selected = new Date(form.date + "T23:59:59");
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+      if (selected > today) {
+        next.date = "Future dates are not allowed.";
+      }
+    }
+
     setErrors(next);
     return Object.keys(next).length === 0;
   }
@@ -41,12 +80,15 @@ export default function TransactionForm({ onSubmit, initialData = null, onCancel
         amount: Number(form.amount),
         type: form.type,
         isDefault: form.isDefault,
+        date: form.date,
       });
-      if (!isEdit) setForm(emptyForm);
+      if (!isEdit) setForm({ ...emptyForm, date: getTodayISO() });
     } finally {
       setSubmitting(false);
     }
   }
+
+  const todayISO = getTodayISO();
 
   return (
     <motion.form
@@ -90,6 +132,25 @@ export default function TransactionForm({ onSubmit, initialData = null, onCancel
           />
           {errors.amount && <p className="mt-1 text-xs text-expense-400">{errors.amount}</p>}
         </div>
+      </div>
+
+      {/* Transaction date field */}
+      <div>
+        <label className="mb-1.5 block text-xs font-medium text-white/50">Transaction date</label>
+        <div className="relative">
+          <CalendarDays
+            size={16}
+            className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40"
+          />
+          <input
+            type="date"
+            value={form.date}
+            max={todayISO}
+            onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
+            className="input-glass input-date pl-10"
+          />
+        </div>
+        {errors.date && <p className="mt-1 text-xs text-expense-400">{errors.date}</p>}
       </div>
 
       <div>
@@ -148,3 +209,4 @@ export default function TransactionForm({ onSubmit, initialData = null, onCancel
     </motion.form>
   );
 }
+

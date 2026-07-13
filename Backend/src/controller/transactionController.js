@@ -6,7 +6,7 @@ const Transaction = require("../models/transaction");
 // @access  Private
 async function createTransaction(req, res) {
   try {
-    const { name, type, amount, isDefault } = req.body;
+    const { name, type, amount, isDefault, date } = req.body;
 
     if (!name || !type || amount === undefined) {
       return res.status(400).json({ message: "Name, type, and amount are required" });
@@ -16,12 +16,23 @@ async function createTransaction(req, res) {
       return res.status(400).json({ message: "Amount cannot be negative" });
     }
 
+    // Validate date is not in the future
+    if (date) {
+      const txDate = new Date(date);
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+      if (txDate > today) {
+        return res.status(400).json({ message: "Future dates are not allowed" });
+      }
+    }
+
     const transaction = await Transaction.create({
       userId: req.user._id, // assumes auth middleware sets req.user
       name,
       type,
       amount,
       isDefault,
+      date: date || Date.now(),
     });
 
     res.status(201).json(transaction);
@@ -90,7 +101,7 @@ async function getTransactionById(req, res) {
 async function updateTransaction(req, res) {
   try {
     const { id } = req.params;
-    const { name, type, amount, isDefault } = req.body;
+    const { name, type, amount, isDefault, date } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid transaction ID" });
@@ -104,9 +115,19 @@ async function updateTransaction(req, res) {
       return res.status(400).json({ message: "Amount cannot be negative" });
     }
 
+    // Validate date is not in the future
+    if (date) {
+      const txDate = new Date(date);
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+      if (txDate > today) {
+        return res.status(400).json({ message: "Future dates are not allowed" });
+      }
+    }
+
     const transaction = await Transaction.findOneAndUpdate(
       { _id: id, userId: req.user._id },
-      { $set: { name, type, amount, isDefault } },
+      { $set: { name, type, amount, isDefault, date } },
       { new: true, runValidators: true }
     );
 

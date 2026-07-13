@@ -26,6 +26,11 @@ const transactionSchema = new mongoose.Schema(
       min: 0,
     },
 
+    date: {
+      type: Date,
+      default: Date.now,
+    },
+
     isDefault: {
       type: Boolean,
       default: false,

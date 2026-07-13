@@ -66,7 +66,7 @@ export default function Dashboard() {
 
   async function handleCreate(payload) {
     const tempId = `temp-${Date.now()}`;
-    const optimisticTx = { ...payload, _id: tempId, createdAt: new Date().toISOString() };
+    const optimisticTx = { ...payload, _id: tempId, date: payload.date, createdAt: new Date().toISOString() };
     const prevTransactions = transactions;
     const prevSummary = summary;
 
