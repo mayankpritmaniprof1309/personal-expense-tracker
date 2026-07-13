@@ -137,7 +137,7 @@ export default function TransactionForm({ onSubmit, initialData = null, onCancel
       {/* Transaction date field */}
       <div>
         <label className="mb-1.5 block text-xs font-medium text-white/50">Transaction date</label>
-        <div className="relative">
+        <div className="relative overflow-hidden">
           <CalendarDays
             size={16}
             className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40"
@@ -147,7 +147,7 @@ export default function TransactionForm({ onSubmit, initialData = null, onCancel
             value={form.date}
             max={todayISO}
             onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
-            className="input-glass input-date pl-10"
+            className="input-glass input-date min-w-0 pl-10"
           />
         </div>
         {errors.date && <p className="mt-1 text-xs text-expense-400">{errors.date}</p>}
