@@ -109,15 +109,31 @@ body {
   .input-date {
     color-scheme: dark;
     cursor: pointer;
+    min-height: 44px; /* accessible touch target */
+    -webkit-appearance: none;
+    appearance: none;
   }
+  /* Make the native picker indicator span the full input so tapping anywhere opens the picker */
   .input-date::-webkit-calendar-picker-indicator {
-    filter: invert(0.7);
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    height: auto;
+    background: transparent;
     cursor: pointer;
-    opacity: 0.6;
-    transition: opacity 0.2s ease;
+    opacity: 0;
   }
-  .input-date::-webkit-calendar-picker-indicator:hover {
-    opacity: 1;
+  /* Visual feedback on tap (mobile) */
+  .input-date:active {
+    border-color: rgba(167, 139, 250, 0.6); /* violet-400/60 */
+    background: rgba(255, 255, 255, 0.06);
+  }
+  /* Wrapper needs border-radius to match the input */
+  .input-date-wrap {
+    border-radius: 0.75rem; /* rounded-xl */
   }
 
   .tabular {

@@ -96,9 +96,8 @@ export default function TransactionForm({ onSubmit, initialData = null, onCancel
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
       onSubmit={handleSubmit}
-      className={`glass-panel space-y-4 p-6 transition-all duration-300 ${
-        isEdit ? "ring-2 ring-violet-500/50 shadow-glow-violet" : ""
-      }`}
+      className={`glass-panel space-y-4 p-6 transition-all duration-300 ${isEdit ? "ring-2 ring-violet-500/50 shadow-glow-violet" : ""
+        }`}
     >
       <div className="flex items-center justify-between">
         <h3 className="font-display text-lg font-semibold text-white">
@@ -137,7 +136,7 @@ export default function TransactionForm({ onSubmit, initialData = null, onCancel
       {/* Transaction date field */}
       <div>
         <label className="mb-1.5 block text-xs font-medium text-white/50">Transaction date</label>
-        <div className="relative overflow-hidden">
+        <div className="input-date-wrap relative overflow-hidden rounded-xl">
           <CalendarDays
             size={16}
             className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40"
@@ -159,22 +158,20 @@ export default function TransactionForm({ onSubmit, initialData = null, onCancel
           <button
             type="button"
             onClick={() => setForm((f) => ({ ...f, type: "income" }))}
-            className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition-all ${
-              form.type === "income"
-                ? "border-income-500/50 bg-income-glow text-income-400"
-                : "border-white/10 bg-white/[0.02] text-white/50 hover:bg-white/[0.05]"
-            }`}
+            className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition-all ${form.type === "income"
+              ? "border-income-500/50 bg-income-glow text-income-400"
+              : "border-white/10 bg-white/[0.02] text-white/50 hover:bg-white/[0.05]"
+              }`}
           >
             <ArrowUpCircle size={16} /> Income
           </button>
           <button
             type="button"
             onClick={() => setForm((f) => ({ ...f, type: "expense" }))}
-            className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition-all ${
-              form.type === "expense"
-                ? "border-expense-500/50 bg-expense-glow text-expense-400"
-                : "border-white/10 bg-white/[0.02] text-white/50 hover:bg-white/[0.05]"
-            }`}
+            className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition-all ${form.type === "expense"
+              ? "border-expense-500/50 bg-expense-glow text-expense-400"
+              : "border-white/10 bg-white/[0.02] text-white/50 hover:bg-white/[0.05]"
+              }`}
           >
             <ArrowDownCircle size={16} /> Expense
           </button>
