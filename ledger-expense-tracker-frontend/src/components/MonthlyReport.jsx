@@ -11,7 +11,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { BarChart3, AreaChart as AreaIcon, LineChart as LineIcon } from "lucide-react";
+import { BarChart3, AreaChart as AreaIcon, LineChart as LineIcon, ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
 import { formatCurrency } from "../utils/format";
 
 const VIEWS = [
@@ -34,47 +34,129 @@ function CustomTooltip({ active, payload, label }) {
   );
 }
 
+/** Build a "YYYY-MM" key from a Date object */
+function toMonthKey(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+/** Format a "YYYY-MM" key to a display label like "Jul 2026" */
+function formatMonthLabel(key) {
+  const [y, m] = key.split("-");
+  const d = new Date(Number(y), Number(m) - 1, 1);
+  return d.toLocaleDateString("en-IN", { month: "short", year: "numeric" });
+}
+
 export default function MonthlyReport({ transactions = [] }) {
   const [view, setView] = useState("area");
+  const [selectedMonth, setSelectedMonth] = useState(null);
 
-  const data = useMemo(() => {
-    const months = {};
+  // Derive all months that have data, sorted chronologically
+  const availableMonths = useMemo(() => {
+    const monthSet = new Set();
     transactions.forEach((t) => {
       const d = new Date(t.date || t.createdAt || Date.now());
-      const key = d.toLocaleDateString("en-IN", { month: "short", year: "2-digit" });
-      if (!months[key]) months[key] = { month: key, income: 0, expense: 0, ts: d.getTime() };
-      months[key][t.type === "income" ? "income" : "expense"] += Number(t.amount) || 0;
+      if (!Number.isNaN(d.getTime())) {
+        monthSet.add(toMonthKey(d));
+      }
     });
-    return Object.values(months)
-      .sort((a, b) => a.ts - b.ts)
-      .slice(-6);
+    return [...monthSet].sort();
   }, [transactions]);
+
+  // Default to current month if it has data, otherwise last available month
+  const currentMonthKey = toMonthKey(new Date());
+  const defaultMonth = availableMonths.includes(currentMonthKey)
+    ? currentMonthKey
+    : availableMonths[availableMonths.length - 1] || currentMonthKey;
+
+  const effectiveMonth = (selectedMonth && availableMonths.includes(selectedMonth))
+    ? selectedMonth
+    : defaultMonth;
+
+  const selectedIdx = availableMonths.indexOf(effectiveMonth);
+  const canGoBack = selectedIdx > 0;
+  const canGoForward = selectedIdx < availableMonths.length - 1;
+
+  function goBack() {
+    if (canGoBack) setSelectedMonth(availableMonths[selectedIdx - 1]);
+  }
+  function goForward() {
+    if (canGoForward) setSelectedMonth(availableMonths[selectedIdx + 1]);
+  }
+
+  // Aggregate day-by-day data for the selected month
+  const data = useMemo(() => {
+    const [y, m] = effectiveMonth.split("-").map(Number);
+
+    const dayMap = {};
+
+    transactions.forEach((t) => {
+      const d = new Date(t.date || t.createdAt || Date.now());
+      if (Number.isNaN(d.getTime())) return;
+      if (toMonthKey(d) !== effectiveMonth) return;
+      const dayNum = d.getDate();
+      if (!dayMap[dayNum]) {
+        const label = `${dayNum} ${new Date(y, m - 1, dayNum).toLocaleDateString("en-IN", { month: "short" })}`;
+        dayMap[dayNum] = { day: label, income: 0, expense: 0, _sort: dayNum };
+      }
+      dayMap[dayNum][t.type === "income" ? "income" : "expense"] += Number(t.amount) || 0;
+    });
+
+    return Object.values(dayMap).sort((a, b) => a._sort - b._sort);
+  }, [transactions, effectiveMonth]);
 
   return (
     <div className="glass-panel p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h3 className="font-display text-lg font-semibold text-white">Monthly Report</h3>
-          <p className="mt-1 text-xs text-white/40">Income and expense trend over recent months</p>
+          <p className="mt-1 text-xs text-white/40">Day-by-day breakdown for the selected month</p>
         </div>
-        <div className="flex rounded-xl border border-white/10 bg-white/[0.02] p-1">
-          {VIEWS.map((v) => (
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Month selector */}
+          <div className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.02] p-1">
             <button
-              key={v.key}
-              onClick={() => setView(v.key)}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-                view === v.key ? "bg-white/10 text-white" : "text-white/40 hover:text-white/70"
-              }`}
+              type="button"
+              onClick={goBack}
+              disabled={!canGoBack}
+              className="rounded-lg p-1.5 text-white/40 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent"
+              aria-label="Previous month"
             >
-              <v.icon size={13} /> {v.label}
+              <ChevronLeft size={14} />
             </button>
-          ))}
+            <span className="flex items-center gap-1.5 px-2 text-xs font-medium text-white">
+              <CalendarDays size={12} className="text-white/40" />
+              {formatMonthLabel(effectiveMonth)}
+            </span>
+            <button
+              type="button"
+              onClick={goForward}
+              disabled={!canGoForward}
+              className="rounded-lg p-1.5 text-white/40 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent"
+              aria-label="Next month"
+            >
+              <ChevronRight size={14} />
+            </button>
+          </div>
+          {/* View toggle */}
+          <div className="flex rounded-xl border border-white/10 bg-white/[0.02] p-1">
+            {VIEWS.map((v) => (
+              <button
+                key={v.key}
+                onClick={() => setView(v.key)}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                  view === v.key ? "bg-white/10 text-white" : "text-white/40 hover:text-white/70"
+                }`}
+              >
+                <v.icon size={13} /> {v.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       {data.length === 0 ? (
         <div className="flex h-72 items-center justify-center text-sm text-white/30">
-          No data to visualize yet
+          No transactions in {formatMonthLabel(effectiveMonth)}
         </div>
       ) : (
         <ResponsiveContainer width="100%" height={300}>
@@ -91,7 +173,7 @@ export default function MonthlyReport({ transactions = [] }) {
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
             <XAxis
-              dataKey="month"
+              dataKey="day"
               tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }}
               axisLine={{ stroke: "rgba(255,255,255,0.08)" }}
               tickLine={false}
@@ -161,3 +243,4 @@ export default function MonthlyReport({ transactions = [] }) {
     </div>
   );
 }
+
