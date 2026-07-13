@@ -27,6 +27,7 @@ export default function Reports() {
       try {
         const res = await getTransactions();
         const list = Array.isArray(res) ? res : res?.transactions || res?.data || [];
+        list.sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt));
         setTransactions(list);
       } catch (err) {
         setLoadError(

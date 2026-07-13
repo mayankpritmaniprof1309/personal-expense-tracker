@@ -48,6 +48,7 @@ export default function Dashboard() {
     try {
       const [txRes, summaryRes] = await Promise.all([getTransactions(), getSummary()]);
       const txList = Array.isArray(txRes) ? txRes : txRes?.transactions || txRes?.data || [];
+      txList.sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt));
       setTransactions(txList);
       setSummary(summaryRes?.summary || summaryRes || deriveSummary(txList));
     } catch (err) {
