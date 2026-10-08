@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import toast from "react-hot-toast";
 import {
   Search,
   Pencil,
@@ -11,8 +12,13 @@ import {
   ChevronRight,
   Banknote,
   Smartphone,
+  FileDown,
+  Sheet,
+  Loader2,
 } from "lucide-react";
 import { formatCurrency, formatDate } from "../utils/format";
+import { getExportTransactions } from "../services/transactionService";
+import { exportTransactionsToCSV, exportReportToPDF } from "../utils/export";
 
 const PAGE_SIZE = 8;
 
@@ -21,6 +27,8 @@ export default function TransactionTable({ transactions = [], onEdit, onDelete }
   const [typeFilter, setTypeFilter] = useState("all");
   const [modeFilter, setModeFilter] = useState("all");
   const [page, setPage] = useState(1);
+  const [exportingCSV, setExportingCSV] = useState(false);
+  const [exportingPDF, setExportingPDF] = useState(false);
 
   const filtered = useMemo(() => {
     return transactions.filter((t) => {
@@ -49,11 +57,79 @@ export default function TransactionTable({ transactions = [], onEdit, onDelete }
     setPage(1);
   }
 
+  async function handleExportCSV() {
+    setExportingCSV(true);
+    try {
+      const params = {};
+      if (typeFilter !== "all") params.type = typeFilter;
+      if (modeFilter !== "all") params.mode = modeFilter;
+      if (query.trim()) params.search = query.trim();
+
+      const res = await getExportTransactions(params);
+      const fullList = Array.isArray(res) ? res : res?.transactions || res?.data || [];
+      if (!fullList.length) {
+        toast.error("No transactions found matching active filters");
+        return;
+      }
+      exportTransactionsToCSV(fullList);
+      toast.success(`Exported all ${fullList.length} matching transactions to Excel/CSV`);
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Failed to export Excel/CSV");
+    } finally {
+      setExportingCSV(false);
+    }
+  }
+
+  async function handleExportPDF() {
+    setExportingPDF(true);
+    try {
+      const params = {};
+      if (typeFilter !== "all") params.type = typeFilter;
+      if (modeFilter !== "all") params.mode = modeFilter;
+      if (query.trim()) params.search = query.trim();
+
+      const res = await getExportTransactions(params);
+      const fullList = Array.isArray(res) ? res : res?.transactions || res?.data || [];
+      if (!fullList.length) {
+        toast.error("No transactions found matching active filters");
+        return;
+      }
+      exportReportToPDF({ transactions: fullList });
+      toast.success(`Exported all ${fullList.length} matching transactions to PDF`);
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Failed to export PDF");
+    } finally {
+      setExportingPDF(false);
+    }
+  }
+
   return (
     <div className="glass-panel p-6">
       <div className="mb-5 flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <h3 className="font-display text-lg font-semibold text-white">Transactions</h3>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={handleExportCSV}
+              disabled={exportingCSV}
+              className="btn-ghost !py-1.5 !px-3 text-xs"
+              title="Export all matching transactions to Excel/CSV"
+            >
+              {exportingCSV ? <Loader2 size={13} className="animate-spin" /> : <Sheet size={13} />}
+              {exportingCSV ? "Exporting..." : "Export Excel"}
+            </button>
+            <button
+              type="button"
+              onClick={handleExportPDF}
+              disabled={exportingPDF}
+              className="btn-primary !py-1.5 !px-3 text-xs"
+              title="Export all matching transactions to PDF"
+            >
+              {exportingPDF ? <Loader2 size={13} className="animate-spin" /> : <FileDown size={13} />}
+              {exportingPDF ? "Exporting..." : "Export PDF"}
+            </button>
+          </div>
         </div>
 
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">

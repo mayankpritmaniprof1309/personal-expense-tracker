@@ -9,8 +9,9 @@ import {
   Hash,
   FileDown,
   Sheet,
+  Loader2,
 } from "lucide-react";
-import { getTransactions } from "../services/transactionService";
+import { getTransactions, getExportTransactions } from "../services/transactionService";
 import { formatCurrency, formatDate } from "../utils/format";
 import { exportTransactionsToCSV, exportReportToPDF } from "../utils/export";
 import { SummaryCardsSkeleton, TableRowsSkeleton, ChartSkeleton } from "../components/LoadingSkeleton";
@@ -21,11 +22,13 @@ export default function Reports() {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+  const [exportingCSV, setExportingCSV] = useState(false);
+  const [exportingPDF, setExportingPDF] = useState(false);
 
   useEffect(() => {
     (async () => {
       try {
-        const res = await getTransactions();
+        const res = await getTransactions({ limit: "all" });
         const list = Array.isArray(res) ? res : res?.transactions || res?.data || [];
         list.sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt));
         setTransactions(list);
@@ -72,22 +75,40 @@ export default function Reports() {
     { label: "Transactions", value: stats.count, icon: Hash, accent: "text-violet-400", chip: "bg-violet-500/15" },
   ];
 
-  function handleExportCSV() {
-    if (!transactions.length) {
-      toast.error("No transactions to export yet");
-      return;
+  async function handleExportCSV() {
+    setExportingCSV(true);
+    try {
+      const res = await getExportTransactions();
+      const fullList = Array.isArray(res) ? res : res?.transactions || res?.data || [];
+      if (!fullList.length) {
+        toast.error("No transactions found to export");
+        return;
+      }
+      exportTransactionsToCSV(fullList);
+      toast.success(`Exported ${fullList.length} transactions to CSV/Excel`);
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Failed to export CSV");
+    } finally {
+      setExportingCSV(false);
     }
-    exportTransactionsToCSV(transactions);
-    toast.success("CSV export started");
   }
 
-  function handleExportPDF() {
-    if (!transactions.length) {
-      toast.error("No transactions to export yet");
-      return;
+  async function handleExportPDF() {
+    setExportingPDF(true);
+    try {
+      const res = await getExportTransactions();
+      const fullList = Array.isArray(res) ? res : res?.transactions || res?.data || [];
+      if (!fullList.length) {
+        toast.error("No transactions found to export");
+        return;
+      }
+      exportReportToPDF({ stats, transactions: fullList });
+      toast.success(`Exported ${fullList.length} transactions to PDF`);
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Failed to export PDF");
+    } finally {
+      setExportingPDF(false);
     }
-    exportReportToPDF({ stats, transactions });
-    toast.success("PDF export started");
   }
 
   return (
@@ -98,11 +119,13 @@ export default function Reports() {
           <p className="mt-1 text-sm text-white/40">A complete snapshot of your financial activity.</p>
         </div>
         <div className="flex gap-3">
-          <button onClick={handleExportCSV} className="btn-ghost">
-            <Sheet size={15} /> Export CSV
+          <button onClick={handleExportCSV} disabled={exportingCSV} className="btn-ghost">
+            {exportingCSV ? <Loader2 size={15} className="animate-spin" /> : <Sheet size={15} />}
+            {exportingCSV ? "Exporting..." : "Export CSV"}
           </button>
-          <button onClick={handleExportPDF} className="btn-primary">
-            <FileDown size={15} /> Export PDF
+          <button onClick={handleExportPDF} disabled={exportingPDF} className="btn-primary">
+            {exportingPDF ? <Loader2 size={15} className="animate-spin" /> : <FileDown size={15} />}
+            {exportingPDF ? "Exporting..." : "Export PDF"}
           </button>
         </div>
       </div>

@@ -49,7 +49,7 @@ async function createTransaction(req, res) {
 
 async function getTransactions(req, res) {
   try {
-    const { type, transactionMode, mode, page = 1, limit = 20 } = req.query;
+    const { type, transactionMode, mode, search, page = 1, limit = 20 } = req.query;
 
     const filter = { userId: req.user._id };
     if (type && ["income", "expense"].includes(type)) {
@@ -70,18 +70,66 @@ async function getTransactions(req, res) {
       }
     }
 
-    const transactions = await Transaction.find(filter)
-      .sort({ date: -1, createdAt: -1 })
-      .skip((Number(page) - 1) * Number(limit))
-      .limit(Number(limit));
+    if (search && search.trim()) {
+      filter.name = { $regex: search.trim(), $options: "i" };
+    }
 
+    const isUnlimited = limit === "0" || limit === "all" || limit === "unlimited";
+    let query = Transaction.find(filter).sort({ date: -1, createdAt: -1 });
+
+    if (!isUnlimited) {
+      query = query.skip((Number(page) - 1) * Number(limit)).limit(Number(limit));
+    }
+
+    const transactions = await query;
     const total = await Transaction.countDocuments(filter);
 
     res.status(200).json({
       transactions,
       total,
-      page: Number(page),
-      totalPages: Math.ceil(total / Number(limit)),
+      page: isUnlimited ? 1 : Number(page),
+      totalPages: isUnlimited ? 1 : Math.ceil(total / (Number(limit) || 1)),
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// @desc    Export transactions without UI pagination limit
+// @route   GET /api/transaction/export
+// @access  Private
+async function exportTransactions(req, res) {
+  try {
+    const { type, transactionMode, mode, search } = req.query;
+
+    const filter = { userId: req.user._id };
+
+    if (type && ["income", "expense"].includes(type)) {
+      filter.type = type;
+    }
+
+    const selectedMode = transactionMode || mode;
+    if (selectedMode && ["cash", "upi"].includes(selectedMode)) {
+      if (selectedMode === "upi") {
+        filter.$or = [
+          { transactionMode: "upi" },
+          { transactionMode: { $exists: false } },
+          { transactionMode: null },
+        ];
+      } else {
+        filter.transactionMode = selectedMode;
+      }
+    }
+
+    if (search && search.trim()) {
+      filter.name = { $regex: search.trim(), $options: "i" };
+    }
+
+    const transactions = await Transaction.find(filter).sort({ date: -1, createdAt: -1 });
+
+    res.status(200).json({
+      transactions,
+      total: transactions.length,
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -238,4 +286,5 @@ module.exports = {
   updateTransaction,
   deleteTransaction,
   getTransactionSummary,
+  exportTransactions,
 };

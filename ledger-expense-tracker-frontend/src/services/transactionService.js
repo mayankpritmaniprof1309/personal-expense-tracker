@@ -35,3 +35,9 @@ export async function getSummary() {
   const { data } = await api.get("/transaction/summary");
   return data;
 }
+
+// GET /api/transaction/export
+export async function getExportTransactions(params = {}) {
+  const { data } = await api.get("/transaction/export", { params });
+  return data;
+}

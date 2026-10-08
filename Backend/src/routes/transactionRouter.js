@@ -10,6 +10,7 @@ router.get("/getTransaction", authMiddleware.authProtectMiddleware, transactionC
 router.get("/getTransactionById/:id", authMiddleware.authProtectMiddleware, transactionCtrl.getTransactionById);
 router.put("/updateTransaction/:id", authMiddleware.authProtectMiddleware, transactionCtrl.updateTransaction);
 router.delete("/deleteTransaction/:id", authMiddleware.authProtectMiddleware, transactionCtrl.deleteTransaction);
+router.get("/export", authMiddleware.authProtectMiddleware, transactionCtrl.exportTransactions);
 router.get("/summary", authMiddleware.authProtectMiddleware, transactionCtrl.getTransactionSummary);
 
 module.exports = router;
