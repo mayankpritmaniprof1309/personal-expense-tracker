@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Plus, ArrowUpCircle, ArrowDownCircle, Loader2, CalendarDays } from "lucide-react";
+import { Plus, ArrowUpCircle, ArrowDownCircle, Loader2, CalendarDays, Banknote, Smartphone } from "lucide-react";
 
 function getTodayISO() {
   const d = new Date();
@@ -10,7 +10,7 @@ function getTodayISO() {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-const emptyForm = { name: "", amount: "", type: "expense", isDefault: false, date: getTodayISO() };
+const emptyForm = { name: "", amount: "", type: "expense", transactionMode: "upi", isDefault: false, date: getTodayISO() };
 
 export default function TransactionForm({ onSubmit, initialData = null, onCancel }) {
   const [form, setForm] = useState(emptyForm);
@@ -43,6 +43,7 @@ export default function TransactionForm({ onSubmit, initialData = null, onCancel
         name: initialData.name || "",
         amount: initialData.amount ?? "",
         type: initialData.type || "expense",
+        transactionMode: initialData.transactionMode || "upi",
         isDefault: Boolean(initialData.isDefault),
         date: existingDate,
       });
@@ -79,6 +80,7 @@ export default function TransactionForm({ onSubmit, initialData = null, onCancel
         name: form.name.trim(),
         amount: Number(form.amount),
         type: form.type,
+        transactionMode: form.transactionMode || "upi",
         isDefault: form.isDefault,
         date: form.date,
       });
@@ -174,6 +176,32 @@ export default function TransactionForm({ onSubmit, initialData = null, onCancel
               }`}
           >
             <ArrowDownCircle size={16} /> Expense
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <label className="mb-1.5 block text-xs font-medium text-white/50">Transaction Mode</label>
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => setForm((f) => ({ ...f, transactionMode: "cash" }))}
+            className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition-all ${form.transactionMode === "cash"
+              ? "border-amber-500/50 bg-amber-500/15 text-amber-300"
+              : "border-white/10 bg-white/[0.02] text-white/50 hover:bg-white/[0.05]"
+              }`}
+          >
+            <Banknote size={16} /> 💵 Cash
+          </button>
+          <button
+            type="button"
+            onClick={() => setForm((f) => ({ ...f, transactionMode: "upi" }))}
+            className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition-all ${form.transactionMode === "upi"
+              ? "border-cyan-500/50 bg-cyan-500/15 text-cyan-300"
+              : "border-white/10 bg-white/[0.02] text-white/50 hover:bg-white/[0.05]"
+              }`}
+          >
+            <Smartphone size={16} /> 📱 UPI
           </button>
         </div>
       </div>

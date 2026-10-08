@@ -3,10 +3,11 @@ import autoTable from "jspdf-autotable";
 import { formatCurrency, formatDate } from "./format";
 
 export function exportTransactionsToCSV(transactions = []) {
-  const header = ["Name", "Type", "Amount", "Date"];
+  const header = ["Name", "Type", "Payment Mode", "Amount", "Date"];
   const rows = transactions.map((t) => [
     t.name,
     t.type,
+    (t.transactionMode || "upi").toUpperCase(),
     t.amount,
     formatDate(t.date || t.createdAt),
   ]);
@@ -57,10 +58,11 @@ export function exportReportToPDF({ stats, transactions = [] }) {
 
   autoTable(doc, {
     startY: afterSummaryY + 4,
-    head: [["Name", "Type", "Amount", "Date"]],
+    head: [["Name", "Type", "Mode", "Amount", "Date"]],
     body: transactions.map((t) => [
       t.name,
       t.type,
+      (t.transactionMode || "upi").toUpperCase(),
       formatCurrency(t.amount),
       formatDate(t.date || t.createdAt),
     ]),

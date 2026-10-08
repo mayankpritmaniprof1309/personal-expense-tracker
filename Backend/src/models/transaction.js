@@ -34,6 +34,12 @@ const transactionSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+
+    transactionMode: {
+      type: String,
+      enum: ["cash", "upi"],
+      default: "upi",
+    },
   },
   {
     timestamps: true,

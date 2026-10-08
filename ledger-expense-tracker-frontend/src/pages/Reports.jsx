@@ -161,28 +161,43 @@ export default function Reports() {
                 <tr className="border-b border-white/[0.06] text-left text-xs uppercase tracking-wider text-white/40">
                   <th className="px-3 py-2 font-medium">Name</th>
                   <th className="px-3 py-2 font-medium">Type</th>
+                  <th className="px-3 py-2 font-medium">Mode</th>
                   <th className="px-3 py-2 font-medium">Date</th>
                   <th className="px-3 py-2 text-right font-medium">Amount</th>
                 </tr>
               </thead>
               <tbody>
-                {transactions.map((t) => (
-                  <tr key={t._id || t.id} className="border-b border-white/[0.04] last:border-none">
-                    <td className="px-3 py-2.5 text-white">{t.name}</td>
-                    <td className={`px-3 py-2.5 capitalize ${t.type === "income" ? "text-income-400" : "text-expense-400"}`}>
-                      {t.type}
-                    </td>
-                    <td className="px-3 py-2.5 text-white/50">{formatDate(t.date || t.createdAt)}</td>
-                    <td
-                      className={`tabular px-3 py-2.5 text-right font-medium ${
-                        t.type === "income" ? "text-income-400" : "text-expense-400"
-                      }`}
-                    >
-                      {t.type === "income" ? "+" : "-"}
-                      {formatCurrency(t.amount)}
-                    </td>
-                  </tr>
-                ))}
+                {transactions.map((t) => {
+                  const mode = t.transactionMode || "upi";
+                  return (
+                    <tr key={t._id || t.id} className="border-b border-white/[0.04] last:border-none">
+                      <td className="px-3 py-2.5 text-white">{t.name}</td>
+                      <td className={`px-3 py-2.5 capitalize ${t.type === "income" ? "text-income-400" : "text-expense-400"}`}>
+                        {t.type}
+                      </td>
+                      <td className="px-3 py-2.5">
+                        {mode === "cash" ? (
+                          <span className="inline-flex items-center gap-1 rounded border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-300">
+                            💵 Cash
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded border border-cyan-500/30 bg-cyan-500/10 px-2 py-0.5 text-[11px] font-medium text-cyan-300">
+                            📱 UPI
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-3 py-2.5 text-white/50">{formatDate(t.date || t.createdAt)}</td>
+                      <td
+                        className={`tabular px-3 py-2.5 text-right font-medium ${
+                          t.type === "income" ? "text-income-400" : "text-expense-400"
+                        }`}
+                      >
+                        {t.type === "income" ? "+" : "-"}
+                        {formatCurrency(t.amount)}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

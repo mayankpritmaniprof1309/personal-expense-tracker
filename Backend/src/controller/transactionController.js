@@ -6,7 +6,7 @@ const Transaction = require("../models/transaction");
 // @access  Private
 async function createTransaction(req, res) {
   try {
-    const { name, type, amount, isDefault, date } = req.body;
+    const { name, type, amount, isDefault, date, transactionMode } = req.body;
 
     if (!name || !type || amount === undefined) {
       return res.status(400).json({ message: "Name, type, and amount are required" });
@@ -14,6 +14,10 @@ async function createTransaction(req, res) {
 
     if (amount < 0) {
       return res.status(400).json({ message: "Amount cannot be negative" });
+    }
+
+    if (transactionMode && !["cash", "upi"].includes(transactionMode)) {
+      return res.status(400).json({ message: "Transaction mode must be 'cash' or 'upi'" });
     }
 
     // Validate date is not in the future
@@ -32,6 +36,7 @@ async function createTransaction(req, res) {
       type,
       amount,
       isDefault,
+      transactionMode: transactionMode || "upi",
       date: date || Date.now(),
     });
 
@@ -44,11 +49,25 @@ async function createTransaction(req, res) {
 
 async function getTransactions(req, res) {
   try {
-    const { type, page = 1, limit = 20 } = req.query;
+    const { type, transactionMode, mode, page = 1, limit = 20 } = req.query;
 
     const filter = { userId: req.user._id };
     if (type && ["income", "expense"].includes(type)) {
       filter.type = type;
+    }
+
+    const selectedMode = transactionMode || mode;
+    if (selectedMode && ["cash", "upi"].includes(selectedMode)) {
+      // Also match records where transactionMode is missing if selectedMode is "upi" (for backward compatibility)
+      if (selectedMode === "upi") {
+        filter.$or = [
+          { transactionMode: "upi" },
+          { transactionMode: { $exists: false } },
+          { transactionMode: null },
+        ];
+      } else {
+        filter.transactionMode = selectedMode;
+      }
     }
 
     const transactions = await Transaction.find(filter)
@@ -101,7 +120,7 @@ async function getTransactionById(req, res) {
 async function updateTransaction(req, res) {
   try {
     const { id } = req.params;
-    const { name, type, amount, isDefault, date } = req.body;
+    const { name, type, amount, isDefault, date, transactionMode } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid transaction ID" });
@@ -109,6 +128,10 @@ async function updateTransaction(req, res) {
 
     if (type && !["income", "expense"].includes(type)) {
       return res.status(400).json({ message: "Type must be 'income' or 'expense'" });
+    }
+
+    if (transactionMode && !["cash", "upi"].includes(transactionMode)) {
+      return res.status(400).json({ message: "Transaction mode must be 'cash' or 'upi'" });
     }
 
     if (amount !== undefined && amount < 0) {
@@ -125,9 +148,14 @@ async function updateTransaction(req, res) {
       }
     }
 
+    const updateFields = { name, type, amount, isDefault, date };
+    if (transactionMode) {
+      updateFields.transactionMode = transactionMode;
+    }
+
     const transaction = await Transaction.findOneAndUpdate(
       { _id: id, userId: req.user._id },
-      { $set: { name, type, amount, isDefault, date } },
+      { $set: updateFields },
       { new: true, runValidators: true }
     );
 
