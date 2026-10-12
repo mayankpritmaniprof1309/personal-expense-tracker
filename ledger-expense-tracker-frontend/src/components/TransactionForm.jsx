@@ -121,13 +121,21 @@ export default function TransactionForm({ onSubmit, initialData = null, onCancel
         </div>
 
         <div>
-          <label className="mb-1.5 block text-xs font-medium text-white/50">Amount</label>
+          <label htmlFor="amount" className="mb-1.5 block text-xs font-medium text-white/50">Amount</label>
           <input
+            id="amount"
+            name="amount"
             type="number"
+            inputMode="decimal"
             min="0"
-            step="0.01"
+            step="any"
             value={form.amount}
             onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
+            onKeyDown={(e) => {
+              if (e.key === "-" || e.key === "e" || e.key === "E") {
+                e.preventDefault();
+              }
+            }}
             placeholder="0.00"
             className="input-glass tabular"
           />
